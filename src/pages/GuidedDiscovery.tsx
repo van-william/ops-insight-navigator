@@ -1,10 +1,37 @@
-
+import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrainCircuit, Lightbulb, MessageSquare, Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DiscoverySession } from "@/components/DiscoverySession";
+
+interface DiscoveryPath {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+}
 
 const GuidedDiscovery = () => {
+  const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
+
+  // Fetch discovery paths
+  const { data: paths } = useQuery<DiscoveryPath[]>({
+    queryKey: ['discoveryPaths'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('discovery_paths')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -14,9 +41,22 @@ const GuidedDiscovery = () => {
             Use structured questioning to identify root causes and develop solutions.
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> New Session
-        </Button>
+        <Dialog open={!!selectedPathId} onOpenChange={() => setSelectedPathId(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Discovery Session</DialogTitle>
+              <DialogDescription>
+                Answer the questions to help identify improvement opportunities.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedPathId && (
+              <DiscoverySession
+                pathId={selectedPathId}
+                onComplete={() => setSelectedPathId(null)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="grid gap-6">
@@ -39,9 +79,9 @@ const GuidedDiscovery = () => {
               <BrainCircuit className="h-16 w-16 text-primary mb-4" />
               <h3 className="text-lg font-medium mb-2">Start a Guided Discovery Session</h3>
               <p className="text-muted-foreground mb-6 max-w-md">
-                Our AI-powered discovery process will help you identify root causes and develop targeted solutions using the "5 Whys" methodology.
+                Our AI-powered discovery process will help you identify root causes and develop targeted solutions using structured methodologies.
               </p>
-              <Button size="lg">
+              <Button size="lg" onClick={() => setSelectedPathId(paths?.[0]?.id)}>
                 Begin New Session
               </Button>
             </div>
@@ -50,60 +90,31 @@ const GuidedDiscovery = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Common Discovery Paths</CardTitle>
+            <CardTitle>Discovery Paths</CardTitle>
             <CardDescription>
-              Pre-defined question paths for frequent operational challenges
+              Choose a specific area to investigate
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
-              <Button variant="outline" className="justify-start h-auto py-3">
-                <div className="flex items-start text-left">
-                  <Lightbulb className="h-5 w-5 mr-3 text-primary" />
-                  <div>
-                    <div className="font-medium">High Scrap Rates</div>
-                    <div className="text-sm text-muted-foreground">
-                      Investigate causes of excessive material waste and quality issues
+              {paths?.map((path) => (
+                <Button
+                  key={path.id}
+                  variant="outline"
+                  className="justify-start h-auto py-3"
+                  onClick={() => setSelectedPathId(path.id)}
+                >
+                  <div className="flex items-start text-left">
+                    <Lightbulb className="h-5 w-5 mr-3 text-primary" />
+                    <div>
+                      <div className="font-medium">{path.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {path.description}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Button>
-              
-              <Button variant="outline" className="justify-start h-auto py-3">
-                <div className="flex items-start text-left">
-                  <Lightbulb className="h-5 w-5 mr-3 text-primary" />
-                  <div>
-                    <div className="font-medium">Long Changeover Times</div>
-                    <div className="text-sm text-muted-foreground">
-                      Analyze setup procedures to identify inefficiencies and improvement opportunities
-                    </div>
-                  </div>
-                </div>
-              </Button>
-              
-              <Button variant="outline" className="justify-start h-auto py-3">
-                <div className="flex items-start text-left">
-                  <Lightbulb className="h-5 w-5 mr-3 text-primary" />
-                  <div>
-                    <div className="font-medium">Equipment Downtime</div>
-                    <div className="text-sm text-muted-foreground">
-                      Explore the root causes of machine reliability issues and maintenance effectiveness
-                    </div>
-                  </div>
-                </div>
-              </Button>
-              
-              <Button variant="outline" className="justify-start h-auto py-3">
-                <div className="flex items-start text-left">
-                  <Lightbulb className="h-5 w-5 mr-3 text-primary" />
-                  <div>
-                    <div className="font-medium">Inventory Management</div>
-                    <div className="text-sm text-muted-foreground">
-                      Address excessive inventory levels, stockouts, and poor inventory accuracy
-                    </div>
-                  </div>
-                </div>
-              </Button>
+                </Button>
+              ))}
             </div>
           </CardContent>
         </Card>

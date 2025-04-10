@@ -6,209 +6,172 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
-      guided_discovery: {
+      discovery_paths: {
         Row: {
-          completed: boolean | null
-          conversation: Json | null
-          created_at: string
           id: string
           name: string
-          summary: string | null
-          updated_at: string
-          user_id: string
+          description: string
+          category: string
+          created_at: string
         }
         Insert: {
-          completed?: boolean | null
-          conversation?: Json | null
-          created_at?: string
           id?: string
           name: string
-          summary?: string | null
-          updated_at?: string
-          user_id: string
+          description: string
+          category: string
+          created_at?: string
         }
         Update: {
-          completed?: boolean | null
-          conversation?: Json | null
-          created_at?: string
           id?: string
           name?: string
-          summary?: string | null
-          updated_at?: string
-          user_id?: string
+          description?: string
+          category?: string
+          created_at?: string
         }
-        Relationships: []
       }
-      maturity_assessment: {
+      discovery_questions: {
         Row: {
-          automation_digital_ops: Json | null
-          changeovers: Json | null
-          completed: boolean | null
-          created_at: string
           id: string
-          lean_manufacturing: Json | null
-          maintenance_effectiveness: Json | null
-          name: string
-          overall_score: number | null
-          planning_scheduling: Json | null
-          plant_layout: Json | null
-          plant_management: Json | null
-          production_efficiency: Json | null
-          quality_control: Json | null
-          updated_at: string
-          user_id: string
-          warehouse_logistics: Json | null
+          path_id: string
+          question: string
+          sequence: number
+          next_question_logic: Json | null
+          created_at: string
         }
         Insert: {
-          automation_digital_ops?: Json | null
-          changeovers?: Json | null
-          completed?: boolean | null
-          created_at?: string
           id?: string
-          lean_manufacturing?: Json | null
-          maintenance_effectiveness?: Json | null
-          name: string
-          overall_score?: number | null
-          planning_scheduling?: Json | null
-          plant_layout?: Json | null
-          plant_management?: Json | null
-          production_efficiency?: Json | null
-          quality_control?: Json | null
-          updated_at?: string
-          user_id: string
-          warehouse_logistics?: Json | null
+          path_id: string
+          question: string
+          sequence: number
+          next_question_logic?: Json | null
+          created_at?: string
         }
         Update: {
-          automation_digital_ops?: Json | null
-          changeovers?: Json | null
-          completed?: boolean | null
-          created_at?: string
           id?: string
-          lean_manufacturing?: Json | null
-          maintenance_effectiveness?: Json | null
-          name?: string
-          overall_score?: number | null
-          planning_scheduling?: Json | null
-          plant_layout?: Json | null
-          plant_management?: Json | null
-          production_efficiency?: Json | null
-          quality_control?: Json | null
-          updated_at?: string
-          user_id?: string
-          warehouse_logistics?: Json | null
+          path_id?: string
+          question?: string
+          sequence?: number
+          next_question_logic?: Json | null
+          created_at?: string
         }
-        Relationships: []
+      }
+      discovery_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          path_id: string
+          status: string
+          current_question: string | null
+          responses: Json
+          recommendations: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          path_id: string
+          status?: string
+          current_question?: string | null
+          responses?: Json
+          recommendations?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          path_id?: string
+          status?: string
+          current_question?: string | null
+          responses?: Json
+          recommendations?: Json
+          created_at?: string
+          updated_at?: string
+        }
       }
       pl_analysis: {
         Row: {
-          copq: number | null
+          id: string
+          user_id: string
+          name: string
           created_at: string
+          updated_at: string
+          direct_material: number | null
           direct_labor_base: number | null
           direct_labor_benefits: number | null
           direct_labor_ot: number | null
-          direct_material: number | null
-          freight_expedited: number | null
-          freight_regular: number | null
-          id: string
+          temp_labor: number | null
           indirect_labor_base: number | null
           indirect_labor_benefits: number | null
           indirect_labor_ot: number | null
-          mro: number | null
-          name: string
-          other_fixed_overhead: number | null
-          other_sga: number | null
-          other_variable_overhead: number | null
           salaried_labor_base: number | null
           salaried_labor_benefits: number | null
           salaried_labor_ot: number | null
-          temp_labor: number | null
-          updated_at: string
-          user_id: string
+          copq: number | null
+          mro: number | null
           utilities: number | null
+          freight_regular: number | null
+          freight_expedited: number | null
+          other_variable_overhead: number | null
+          other_fixed_overhead: number | null
+          other_sga: number | null
         }
         Insert: {
-          copq?: number | null
-          created_at?: string
-          direct_labor_base?: number | null
-          direct_labor_benefits?: number | null
-          direct_labor_ot?: number | null
-          direct_material?: number | null
-          freight_expedited?: number | null
-          freight_regular?: number | null
           id?: string
-          indirect_labor_base?: number | null
-          indirect_labor_benefits?: number | null
-          indirect_labor_ot?: number | null
-          mro?: number | null
-          name: string
-          other_fixed_overhead?: number | null
-          other_sga?: number | null
-          other_variable_overhead?: number | null
-          salaried_labor_base?: number | null
-          salaried_labor_benefits?: number | null
-          salaried_labor_ot?: number | null
-          temp_labor?: number | null
-          updated_at?: string
           user_id: string
-          utilities?: number | null
-        }
-        Update: {
-          copq?: number | null
+          name: string
           created_at?: string
+          updated_at?: string
+          direct_material?: number | null
           direct_labor_base?: number | null
           direct_labor_benefits?: number | null
           direct_labor_ot?: number | null
-          direct_material?: number | null
-          freight_expedited?: number | null
-          freight_regular?: number | null
-          id?: string
+          temp_labor?: number | null
           indirect_labor_base?: number | null
           indirect_labor_benefits?: number | null
           indirect_labor_ot?: number | null
-          mro?: number | null
-          name?: string
-          other_fixed_overhead?: number | null
-          other_sga?: number | null
-          other_variable_overhead?: number | null
           salaried_labor_base?: number | null
           salaried_labor_benefits?: number | null
           salaried_labor_ot?: number | null
-          temp_labor?: number | null
-          updated_at?: string
-          user_id?: string
+          copq?: number | null
+          mro?: number | null
           utilities?: number | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          company: string | null
-          created_at: string
-          full_name: string | null
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          company?: string | null
-          created_at?: string
-          full_name?: string | null
-          id: string
-          updated_at?: string
+          freight_regular?: number | null
+          freight_expedited?: number | null
+          other_variable_overhead?: number | null
+          other_fixed_overhead?: number | null
+          other_sga?: number | null
         }
         Update: {
-          avatar_url?: string | null
-          company?: string | null
-          created_at?: string
-          full_name?: string | null
           id?: string
+          user_id?: string
+          name?: string
+          created_at?: string
           updated_at?: string
+          direct_material?: number | null
+          direct_labor_base?: number | null
+          direct_labor_benefits?: number | null
+          direct_labor_ot?: number | null
+          temp_labor?: number | null
+          indirect_labor_base?: number | null
+          indirect_labor_benefits?: number | null
+          indirect_labor_ot?: number | null
+          salaried_labor_base?: number | null
+          salaried_labor_benefits?: number | null
+          salaried_labor_ot?: number | null
+          copq?: number | null
+          mro?: number | null
+          utilities?: number | null
+          freight_regular?: number | null
+          freight_expedited?: number | null
+          other_variable_overhead?: number | null
+          other_fixed_overhead?: number | null
+          other_sga?: number | null
         }
-        Relationships: []
       }
     }
     Views: {
@@ -218,9 +181,6 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
       [_ in never]: never
     }
   }

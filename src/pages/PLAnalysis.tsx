@@ -18,48 +18,62 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 // Define the schema for the form with value transformations
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  // Direct Costs
   direct_material: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   direct_labor_base: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   direct_labor_benefits: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   direct_labor_ot: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   temp_labor: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
+  
+  // Indirect Labor
   indirect_labor_base: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   indirect_labor_benefits: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   indirect_labor_ot: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
+  
+  // Salaried Labor
   salaried_labor_base: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   salaried_labor_benefits: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   salaried_labor_ot: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
+  
+  // Quality & Maintenance
   copq: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   mro: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
+  
+  // Utilities & Freight
   utilities: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   freight_regular: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   freight_expedited: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
+  
+  // Overhead
   other_variable_overhead: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   other_fixed_overhead: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
   other_sga: z.string().optional()
-    .transform(val => val ? Number(val) : null),
+    .transform(val => val ? Math.max(0, Number(val)) : null),
 });
 
 // Define the type for our data
-interface PLAnalysisData extends z.infer<typeof formSchema> {}
+interface PLAnalysisData extends z.infer<typeof formSchema> {
+  // Add at least one required field
+  name: string;
+}
 
 // Define the database table type to match Supabase
 interface PLAnalysisRecord {
@@ -156,7 +170,7 @@ const PLAnalysis = () => {
           }
         }
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<keyof PLAnalysisData, string | number | null>);
       
       // If we have a currentId, update that record, otherwise create a new one
       const { data, error } = currentId 
@@ -167,7 +181,7 @@ const PLAnalysis = () => {
             .select()
         : await supabase
             .from('pl_analysis')
-            .insert({ ...formData, user_id: user.id, name: values.name })
+            .insert({ ...formData, user_id: user.id })
             .select();
       
       if (error) throw error;
@@ -201,7 +215,7 @@ const PLAnalysis = () => {
         if (typeof value === 'number' || value === null) {
           acc[key as keyof PLAnalysisData] = value === null ? "" : String(value);
         } else {
-          acc[key as keyof PLAnalysisData] = value as any;
+          acc[key as keyof PLAnalysisData] = value;
         }
       }
       return acc;
@@ -729,20 +743,130 @@ const PLAnalysis = () => {
         </TabsContent>
         
         <TabsContent value="analysis">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cost Analysis Dashboard</CardTitle>
-              <CardDescription>
-                Visualize your cost breakdown and identify improvement opportunities.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                This dashboard will show cost breakdown visualizations, "what-if" sliders for
-                sensitivity analysis, and potential savings calculations based on industry benchmarks.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Cost Addressability Analysis</CardTitle>
+                <CardDescription>
+                  Breakdown of costs by addressability level
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Variable Costs Section */}
+                  <div>
+                    <h4 className="text-sm font-medium text-green-600 mb-2">Highly Addressable (Variable) Costs</h4>
+                    <div className="space-y-2">
+                      {Object.entries(calculateAddressableOpportunities(form.getValues()).variableCosts).map(([name, value]) => (
+                        <div key={name} className="flex items-center justify-between">
+                          <span className="text-sm">{name}</span>
+                          <span className="text-sm font-medium">${value.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between border-t pt-2">
+                        <span className="text-sm font-medium">Total Variable Costs</span>
+                        <span className="text-sm font-medium">
+                          ${calculateAddressableOpportunities(form.getValues()).totalVariable.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Semi-Variable Costs Section */}
+                  <div>
+                    <h4 className="text-sm font-medium text-yellow-600 mb-2">Low Addressability (Semi-Variable) Costs</h4>
+                    <div className="space-y-2">
+                      {Object.entries(calculateAddressableOpportunities(form.getValues()).semiVariableCosts).map(([name, value]) => (
+                        <div key={name} className="flex items-center justify-between">
+                          <span className="text-sm">{name}</span>
+                          <span className="text-sm font-medium">${value.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between border-t pt-2">
+                        <span className="text-sm font-medium">Total Semi-Variable Costs</span>
+                        <span className="text-sm font-medium">
+                          ${calculateAddressableOpportunities(form.getValues()).totalSemiVariable.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fixed Costs Section */}
+                  <div>
+                    <h4 className="text-sm font-medium text-red-600 mb-2">Limited Addressability (Fixed) Costs</h4>
+                    <div className="space-y-2">
+                      {Object.entries(calculateAddressableOpportunities(form.getValues()).fixedCosts).map(([name, value]) => (
+                        <div key={name} className="flex items-center justify-between">
+                          <span className="text-sm">{name}</span>
+                          <span className="text-sm font-medium">${value.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between border-t pt-2">
+                        <span className="text-sm font-medium">Total Fixed Costs</span>
+                        <span className="text-sm font-medium">
+                          ${calculateAddressableOpportunities(form.getValues()).totalFixed.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Opportunity Assessment</CardTitle>
+                <CardDescription>
+                  Estimated cost reduction opportunities by category
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-green-600 mb-2">Variable Cost Opportunities</h4>
+                      <p className="text-2xl font-bold">
+                        ${calculateOpportunityEstimates(form.getValues()).variableOpportunity.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Focus areas: overtime reduction, quality improvement, freight optimization
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-yellow-600 mb-2">Semi-Variable Cost Opportunities</h4>
+                      <p className="text-2xl font-bold">
+                        ${calculateOpportunityEstimates(form.getValues()).semiVariableOpportunity.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Focus areas: labor efficiency, MRO optimization, logistics improvement
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-red-600 mb-2">Fixed Cost Opportunities</h4>
+                      <p className="text-2xl font-bold">
+                        ${calculateOpportunityEstimates(form.getValues()).fixedOpportunity.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Focus areas: space utilization, energy efficiency, process automation
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <h4 className="text-sm font-medium mb-2">Total Estimated Opportunity</h4>
+                    <p className="text-3xl font-bold">
+                      ${calculateOpportunityEstimates(form.getValues()).totalOpportunity.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Based on industry benchmarks for high-mix low-volume manufacturing
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         <TabsContent value="actions">
@@ -767,3 +891,110 @@ const PLAnalysis = () => {
 };
 
 export default PLAnalysis;
+
+const calculateTotalDirectLabor = (values: PLAnalysisData) => {
+  const base = Number(values.direct_labor_base) || 0;
+  const benefits = Number(values.direct_labor_benefits) || 0;
+  const ot = Number(values.direct_labor_ot) || 0;
+  const temp = Number(values.temp_labor) || 0;
+  return base + benefits + ot + temp;
+};
+
+const calculateTotalIndirectCosts = (values: PLAnalysisData) => {
+  const indirectLabor = (Number(values.indirect_labor_base) || 0) +
+    (Number(values.indirect_labor_benefits) || 0) +
+    (Number(values.indirect_labor_ot) || 0);
+  const salariedLabor = (Number(values.salaried_labor_base) || 0) +
+    (Number(values.salaried_labor_benefits) || 0) +
+    (Number(values.salaried_labor_ot) || 0);
+  const overhead = (Number(values.other_variable_overhead) || 0) +
+    (Number(values.other_fixed_overhead) || 0) +
+    (Number(values.other_sga) || 0);
+  return indirectLabor + salariedLabor + overhead;
+};
+
+const calculateCostDistribution = (values: PLAnalysisData) => {
+  const total = Object.entries(values).reduce((sum, [key, value]) => {
+    if (key !== 'name' && value) {
+      return sum + (Number(value) || 0);
+    }
+    return sum;
+  }, 0);
+
+  if (total === 0) return {};
+
+  return {
+    'Direct Labor': ((calculateTotalDirectLabor(values) / total) * 100),
+    'Indirect Labor': (((Number(values.indirect_labor_base) || 0) +
+      (Number(values.indirect_labor_benefits) || 0) +
+      (Number(values.indirect_labor_ot) || 0)) / total) * 100,
+    'Salaried Labor': (((Number(values.salaried_labor_base) || 0) +
+      (Number(values.salaried_labor_benefits) || 0) +
+      (Number(values.salaried_labor_ot) || 0)) / total) * 100,
+    'Materials': ((Number(values.direct_material) || 0) / total) * 100,
+    'Quality & Maintenance': (((Number(values.copq) || 0) +
+      (Number(values.mro) || 0)) / total) * 100,
+    'Overhead & Other': (((Number(values.other_variable_overhead) || 0) +
+      (Number(values.other_fixed_overhead) || 0) +
+      (Number(values.other_sga) || 0)) / total) * 100,
+  };
+};
+
+const calculateAddressableOpportunities = (values: PLAnalysisData) => {
+  // Variable Costs (Highly Addressable)
+  const variableCosts = {
+    'Overtime Costs': (Number(values.direct_labor_ot) || 0) +
+      (Number(values.indirect_labor_ot) || 0) +
+      (Number(values.salaried_labor_ot) || 0),
+    'Quality Costs (COPQ)': Number(values.copq) || 0,
+    'Expedited Freight': Number(values.freight_expedited) || 0,
+    'Other Variable Overhead': Number(values.other_variable_overhead) || 0
+  };
+
+  // Semi-Variable Costs (Low Addressability)
+  const semiVariableCosts = {
+    'Direct Labor (Base + Benefits)': (Number(values.direct_labor_base) || 0) +
+      (Number(values.direct_labor_benefits) || 0),
+    'Indirect Labor (Base + Benefits)': (Number(values.indirect_labor_base) || 0) +
+      (Number(values.indirect_labor_benefits) || 0),
+    'Temp Labor': Number(values.temp_labor) || 0,
+    'MRO': Number(values.mro) || 0,
+    'Regular Freight': Number(values.freight_regular) || 0
+  };
+
+  // Fixed Costs
+  const fixedCosts = {
+    'Salaried Labor (Base + Benefits)': (Number(values.salaried_labor_base) || 0) +
+      (Number(values.salaried_labor_benefits) || 0),
+    'Fixed Overhead': Number(values.other_fixed_overhead) || 0,
+    'SG&A': Number(values.other_sga) || 0,
+    'Utilities': Number(values.utilities) || 0
+  };
+
+  return {
+    variableCosts,
+    semiVariableCosts,
+    fixedCosts,
+    totalVariable: Object.values(variableCosts).reduce((a, b) => a + b, 0),
+    totalSemiVariable: Object.values(semiVariableCosts).reduce((a, b) => a + b, 0),
+    totalFixed: Object.values(fixedCosts).reduce((a, b) => a + b, 0)
+  };
+};
+
+const calculateOpportunityEstimates = (values: PLAnalysisData) => {
+  const opportunities = calculateAddressableOpportunities(values);
+  
+  // Estimated improvement potential percentages
+  const variableImprovement = 0.25; // 25% potential improvement on variable costs
+  const semiVariableImprovement = 0.10; // 10% potential improvement on semi-variable costs
+  const fixedImprovement = 0.05; // 5% potential improvement on fixed costs
+
+  return {
+    variableOpportunity: opportunities.totalVariable * variableImprovement,
+    semiVariableOpportunity: opportunities.totalSemiVariable * semiVariableImprovement,
+    fixedOpportunity: opportunities.totalFixed * fixedImprovement,
+    totalOpportunity: (opportunities.totalVariable * variableImprovement) +
+      (opportunities.totalSemiVariable * semiVariableImprovement) +
+      (opportunities.totalFixed * fixedImprovement)
+  };
+};

@@ -1,73 +1,96 @@
-# Welcome to your Lovable project
+# Ops Insight Navigator
 
-## Project info
+A modern web application for assessing and improving manufacturing operations, with a focus on high-mix, low-volume (HMLV) environments.
 
-**URL**: https://lovable.dev/projects/a40b64fa-aecf-40b6-8a16-18009ec35bfa
+## Motivation
 
-## How can I edit this code?
+Manufacturing operations, especially in HMLV environments, face unique challenges that traditional assessment tools don't adequately address. This tool provides:
 
-There are several ways of editing your application.
+- Structured assessment of operational maturity
+- Industry-specific benchmarking
+- AI-powered guided discovery for improvement opportunities
+- Real-time tracking and visualization of progress
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a40b64fa-aecf-40b6-8a16-18009ec35bfa) and start prompting.
+- **Maturity Assessment**: Evaluate your operations across 10 key dimensions
+- **Benchmark Comparison**: Compare your performance against industry standards
+- **Guided Discovery**: AI-assisted exploration of improvement opportunities
+- **Visual Analytics**: Interactive charts and dashboards for insights
+- **Progress Tracking**: Monitor improvements over time
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js 18+ (we recommend using nvm)
+- Supabase account
+- OpenAI API key (for AI features)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/ops-insight-navigator.git
+   cd ops-insight-navigator
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+   Fill in your Supabase and OpenAI credentials in `.env`
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### Database Setup
 
-**Edit a file directly in GitHub**
+1. Create a new Supabase project
+2. Run the migrations:
+   ```bash
+   supabase db push
+   ```
+3. (Optional) Load sample data:
+   ```bash
+   supabase db reset --db-url=your-db-url
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Development
 
-**Use GitHub Codespaces**
+- Built with React + Vite + TypeScript
+- UI components from shadcn/ui
+- Styling with Tailwind CSS
+- Database and auth with Supabase
+- State management with TanStack Query
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+See `.cursor/rules/development.md` for coding guidelines and best practices.
 
-## What technologies are used for this project?
+## Contributing
 
-This project is built with:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## License
 
-## How can I deploy this project?
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Simply open [Lovable](https://lovable.dev/projects/a40b64fa-aecf-40b6-8a16-18009ec35bfa) and click on Share -> Publish.
+## Acknowledgments
 
-## Can I connect a custom domain to my Lovable project?
+- Built with [shadcn/ui](https://ui.shadcn.com/)
+- Powered by [Supabase](https://supabase.com/)
+- AI features by [OpenAI](https://openai.com/)
 
-Yes it is!
+## Support
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+For support, please open an issue in the GitHub repository or contact the maintainers.

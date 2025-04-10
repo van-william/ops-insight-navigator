@@ -1,10 +1,39 @@
-
+import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, ClipboardCheck, ListChecks, Plus } from "lucide-react";
+import { AssessmentWizard } from "@/components/AssessmentWizard";
 
 const MaturityAssessment = () => {
+  const [isAssessing, setIsAssessing] = useState(false);
+
+  const handleStartAssessment = () => {
+    setIsAssessing(true);
+  };
+
+  const handleCompleteAssessment = (responses) => {
+    console.log("Assessment completed:", responses);
+    setIsAssessing(false);
+    // TODO: Navigate to results page
+  };
+
+  if (isAssessing) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Operations Maturity Assessment</h1>
+            <p className="text-muted-foreground">
+              Rate each aspect on a scale of 1-5 and provide any relevant notes.
+            </p>
+          </div>
+        </div>
+        <AssessmentWizard onComplete={handleCompleteAssessment} />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -14,7 +43,7 @@ const MaturityAssessment = () => {
             Evaluate your operational maturity across key dimensions.
           </p>
         </div>
-        <Button>
+        <Button onClick={handleStartAssessment}>
           <Plus className="mr-2 h-4 w-4" /> New Assessment
         </Button>
       </div>
@@ -34,7 +63,7 @@ const MaturityAssessment = () => {
                   </CardDescription>
                 </div>
               </div>
-              <Button>Start Assessment</Button>
+              <Button onClick={handleStartAssessment}>Start Assessment</Button>
             </div>
           </CardHeader>
           <CardContent>

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
@@ -66,8 +65,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       });
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(`Error signing in: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.error(`Error signing in: ${err.message}`);
     }
   };
 
@@ -77,8 +77,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAnonymous(false);
       localStorage.removeItem("anonymousMode");
       navigate('/auth');
-    } catch (error: any) {
-      toast.error(`Error signing out: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.error(`Error signing out: ${err.message}`);
     }
   };
 
