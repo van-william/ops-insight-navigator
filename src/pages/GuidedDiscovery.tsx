@@ -7,12 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DiscoverySession } from "@/components/DiscoverySession";
+import { AIDiscoverySession } from "@/components/AIDiscoverySession";
 
 interface DiscoveryPath {
   id: string;
   name: string;
   description: string;
   category: string;
+  use_ai: boolean;
+  approach_type: string;
 }
 
 const GuidedDiscovery = () => {
@@ -32,6 +35,9 @@ const GuidedDiscovery = () => {
     }
   });
 
+  // Find the selected path
+  const selectedPath = paths?.find(path => path.id === selectedPathId);
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -46,10 +52,18 @@ const GuidedDiscovery = () => {
             <DialogHeader>
               <DialogTitle>Discovery Session</DialogTitle>
               <DialogDescription>
-                Answer the questions to help identify improvement opportunities.
+                {selectedPath?.use_ai 
+                  ? "Have a conversation with our AI consultant to explore challenges" 
+                  : "Answer the questions to help identify improvement opportunities"}
               </DialogDescription>
             </DialogHeader>
-            {selectedPathId && (
+            {selectedPathId && selectedPath?.use_ai && (
+              <AIDiscoverySession
+                pathId={selectedPathId}
+                onComplete={() => setSelectedPathId(null)}
+              />
+            )}
+            {selectedPathId && !selectedPath?.use_ai && (
               <DiscoverySession
                 pathId={selectedPathId}
                 onComplete={() => setSelectedPathId(null)}

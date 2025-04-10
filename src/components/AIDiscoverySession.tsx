@@ -7,11 +7,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, Save } from "lucide-react";
+import { generateAIResponse, ChatMessage } from '@/lib/openai';
 
-interface Message {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
+// Use the imported ChatMessage type
+type Message = ChatMessage;
 
 interface AIDiscoverySessionProps {
   pathId: string;
@@ -96,22 +95,26 @@ export const AIDiscoverySession = ({ pathId, onComplete }: AIDiscoverySessionPro
   const generateResponse = async (userMessage: string) => {
     setIsThinking(true);
     try {
-      // Here you would integrate with your chosen AI provider (Anthropic, OpenAI, etc.)
-      // For now, we'll simulate a response
-      const simulatedResponse = await new Promise<string>((resolve) => {
-        setTimeout(() => {
-          resolve("This is a simulated AI response. In production, this would be replaced with actual AI responses based on the context and user input.");
-        }, 1000);
-      });
-
-      const updatedMessages = [
+      // Add user message to the messages array
+      const updatedMessages: ChatMessage[] = [
         ...messages,
-        { role: 'user', content: userMessage },
-        { role: 'assistant', content: simulatedResponse }
+        { role: 'user' as const, content: userMessage }
+      ];
+      
+      // Call OpenAI API through our lib function
+      const aiResponse = await generateAIResponse(
+        user?.id || 'anonymous',
+        updatedMessages
+      );
+      
+      // Add AI response to messages
+      const finalMessages: ChatMessage[] = [
+        ...updatedMessages,
+        { role: 'assistant' as const, content: aiResponse }
       ];
 
-      setMessages(updatedMessages);
-      await updateConversation.mutateAsync(updatedMessages);
+      setMessages(finalMessages);
+      await updateConversation.mutateAsync(finalMessages);
       setCurrentMessage("");
     } catch (error) {
       toast.error("Failed to generate response");

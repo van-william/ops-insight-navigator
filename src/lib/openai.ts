@@ -14,7 +14,7 @@ const GPT4_OUTPUT_COST = 0.03;  // $0.03 per 1K tokens
 // Convert dollars to credits (1 credit = $0.01)
 const DOLLARS_TO_CREDITS = 100;
 
-type ChatMessage = {
+export type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
 };

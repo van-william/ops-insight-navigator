@@ -78,6 +78,10 @@ INSERT INTO discovery_paths (name, description, category) VALUES
 ('Inventory Optimization', 'Assessment of inventory levels and WIP management', 'logistics'),
 ('Process Standardization', 'Evaluation of standard work and documentation effectiveness', 'quality');
 
+-- Update discovery paths to enable AI for some
+UPDATE discovery_paths SET use_ai = true, approach_type = 'ai-guided' WHERE name = 'Quality Control Enhancement';
+UPDATE discovery_paths SET use_ai = true, approach_type = 'ai-guided' WHERE name = 'Machine Utilization';
+
 -- Seed discovery questions for Setup Time Reduction path
 WITH path AS (SELECT id FROM discovery_paths WHERE name = 'Setup Time Reduction' LIMIT 1)
 INSERT INTO discovery_questions (path_id, question, sequence, next_question_logic) VALUES
