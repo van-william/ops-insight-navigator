@@ -1,9 +1,14 @@
 import OpenAI from 'openai';
 import { supabase } from '@/integrations/supabase/client';
 
+const openaiApiKey = import.meta.env.VITE_OPENAI_API_KEY;
+if (!openaiApiKey) {
+  throw new Error('Missing OpenAI API key environment variable');
+}
+
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  apiKey: openaiApiKey,
   dangerouslyAllowBrowser: true // Note: In production, you should proxy through your backend
 });
 
