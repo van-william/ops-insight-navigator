@@ -14,6 +14,11 @@ const GPT4_OUTPUT_COST = 0.03;  // $0.03 per 1K tokens
 // Convert dollars to credits (1 credit = $0.01)
 const DOLLARS_TO_CREDITS = 100;
 
+type ChatMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
 export async function checkCredits(userId: string): Promise<number> {
   const { data: credits } = await supabase
     .from('user_credits')
@@ -55,7 +60,7 @@ export async function checkDailyLimit(userId: string): Promise<boolean> {
 
 export async function generateAIResponse(
   userId: string,
-  messages: Array<{ role: string; content: string; }>
+  messages: ChatMessage[]
 ): Promise<string> {
   // Check daily limit first
   const canAsk = await checkDailyLimit(userId);
@@ -66,7 +71,7 @@ export async function generateAIResponse(
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4-turbo-preview',
-      messages: messages as any,
+      messages,
       temperature: 0.7,
       max_tokens: 1000
     });

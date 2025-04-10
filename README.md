@@ -1,3 +1,7 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/3cec0fbc-fd7c-4c92-9d60-fae84d87cd4e/deploy-status)](https://app.netlify.com/sites/ops-insights/deploys)
+
+website: https://ops-insights.netlify.app
+
 # Ops Insight Navigator
 
 A modern web application for assessing and improving manufacturing operations, with a focus on high-mix, low-volume (HMLV) environments.
