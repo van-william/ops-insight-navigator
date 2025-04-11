@@ -7,7 +7,7 @@ import { toast } from "sonner";
 type AuthContextType = {
   user: User | null;
   session: Session | null;
-  signIn: (provider: "google") => void;
+  signIn: () => void;
   signOut: () => Promise<void>;
   loading: boolean;
   isAnonymous: boolean;
@@ -30,7 +30,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        // Log auth state changes
+        await fetch('/.netlify/functions/auth-logger', {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'auth',
+            message: `Auth state changed: ${event}`,
+            details: {
+              event,
+              hasSession: !!session,
+              userId: session?.user?.id,
+              userEmail: session?.user?.email,
+              authProvider: session?.user?.app_metadata?.provider,
+              timestamp: new Date().toISOString()
+            },
+            level: 'info'
+          })
+        });
+
         if (event === 'SIGNED_IN' && session) {
           setSession(session);
           setUser(session.user);
@@ -40,7 +58,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
-          // Don't reset anonymous state here as sign out could happen from anonymous mode too
           toast.info("Signed out successfully");
         }
       }
@@ -56,127 +73,128 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (provider: "google") => {
+  const signIn = async () => {
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback`;
-      
-      // Log detailed auth attempt info
+      // Log the start of authentication
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
         body: JSON.stringify({
           type: 'auth',
-          message: 'Auth attempt started',
-          level: 'info',
+          message: 'Starting authentication process',
           details: {
-            provider,
-            redirectUrl,
-            urlDetails: {
-              raw: redirectUrl,
-              encoded: encodeURIComponent(redirectUrl),
-              length: redirectUrl.length,
-              charCodes: Array.from(redirectUrl).map(c => c.charCodeAt(0)),
-              components: {
-                origin: window.location.origin,
-                pathname: '/auth/callback',
-                full: `${window.location.origin}/auth/callback`
-              }
-            },
-            configuredUrl: {
-              raw: 'https://ops-insights.netlify.app/auth/callback',
-              encoded: encodeURIComponent('https://ops-insights.netlify.app/auth/callback'),
-              length: 'https://ops-insights.netlify.app/auth/callback'.length,
-              charCodes: Array.from('https://ops-insights.netlify.app/auth/callback').map(c => c.charCodeAt(0))
-            },
-            exactMatch: redirectUrl === 'https://ops-insights.netlify.app/auth/callback',
+            provider: 'google',
             origin: window.location.origin,
             currentUrl: window.location.href,
-            headers: {
-              host: window.location.host,
-              protocol: window.location.protocol,
-              referrer: document.referrer
-            }
-          }
+          },
+          level: 'info'
         })
       });
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent'
+            prompt: 'consent',
           }
         }
       });
-      
-      if (error) {
-        // Log detailed error info
-        await fetch('/.netlify/functions/auth-logger', {
-          method: 'POST',
-          body: JSON.stringify({
-            type: 'error',
-            message: 'Auth error occurred',
-            level: 'error',
-            details: {
-              error: error.message,
-              provider,
-              redirectUrl,
-              errorCode: error.status,
-              errorName: error.name,
-              stack: error.stack,
-              supabaseError: error
-            }
-          })
-        });
-        throw error;
-      }
 
-      // Log success
+      // Log the response from Supabase
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
         body: JSON.stringify({
           type: 'auth',
-          message: 'Auth initiated successfully',
-          level: 'info',
+          message: 'Supabase auth response received',
           details: {
-            provider,
-            redirectUrl,
-            data
-          }
+            provider: 'google',
+            hasError: !!error,
+            errorMessage: error?.message,
+            hasData: !!data,
+            url: data?.url,
+            auth_response_type: Object.prototype.toString.call(data)
+          },
+          level: error ? 'error' : 'info'
         })
       });
-    } catch (error: unknown) {
-      const err = error as Error;
-      console.error('Sign in error:', err);
-      toast.error(`Error signing in: ${err.message}`);
-      
-      // Log unexpected errors
+
+      if (error) throw error;
+
+      // Log successful redirect initiation
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'auth',
+          message: 'Redirecting to authentication URL',
+          details: {
+            provider: 'google',
+            redirectUrl: data.url,
+          },
+          level: 'info'
+        })
+      });
+
+    } catch (error) {
+      // Log any errors during the process
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
         body: JSON.stringify({
           type: 'error',
-          message: 'Unexpected auth error',
-          level: 'error',
+          message: 'Authentication error occurred',
           details: {
-            error: err.message,
-            stack: err.stack,
-            provider,
-            type: err.name
-          }
+            provider: 'google',
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+          level: 'error'
         })
       });
+      console.error('Error:', error);
     }
   };
 
   const signOut = async () => {
     try {
+      // Log sign out attempt
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'auth',
+          message: 'User initiated sign out',
+          details: {
+            userId: user?.id,
+            userEmail: user?.email,
+            authProvider: user?.app_metadata?.provider,
+            isAnonymous
+          },
+          level: 'info'
+        })
+      });
+
       await supabase.auth.signOut();
       setIsAnonymous(false);
       localStorage.removeItem("anonymousMode");
       navigate('/auth');
     } catch (error: unknown) {
       const err = error as Error;
+      // Log sign out error
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'error',
+          message: 'Error during sign out',
+          details: {
+            error: err.message,
+            stack: err.stack,
+            userId: user?.id,
+            userEmail: user?.email,
+            authProvider: user?.app_metadata?.provider,
+            isAnonymous
+          },
+          level: 'error'
+        })
+      });
       toast.error(`Error signing out: ${err.message}`);
     }
   };
