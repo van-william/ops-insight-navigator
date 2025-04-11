@@ -34,6 +34,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Log auth state changes
         await fetch('/.netlify/functions/auth-logger', {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({
             type: 'auth',
             message: `Auth state changed: ${event}`,
@@ -78,6 +81,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Log the start of authentication
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           type: 'auth',
           message: 'Starting authentication process',
@@ -104,6 +110,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Log the response from Supabase
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           type: 'auth',
           message: 'Supabase auth response received',
@@ -124,6 +133,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Log successful redirect initiation
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           type: 'auth',
           message: 'Redirecting to authentication URL',
@@ -139,6 +151,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Log any errors during the process
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           type: 'error',
           message: 'Authentication error occurred',
@@ -159,6 +174,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Log sign out attempt
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           type: 'auth',
           message: 'User initiated sign out',
@@ -181,6 +199,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Log sign out error
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           type: 'error',
           message: 'Error during sign out',
