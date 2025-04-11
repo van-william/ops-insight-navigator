@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `http://localhost:8080/auth/callback`
+          redirectTo: `https://ops-insights.netlify.app/auth/callback`
         }
       });
       if (error) throw error;
