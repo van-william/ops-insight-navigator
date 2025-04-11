@@ -9,28 +9,53 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log('=== Auth Callback Details ===');
-      console.log('Current URL:', window.location.href);
-      console.log('Location:', location);
-      console.log('Search params:', new URLSearchParams(location.search).toString());
-      
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Get the hash parameters from the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
         
-        console.log('Session data:', session);
-        if (error) {
-          console.error('Auth session error:', error);
-          toast.error('Authentication error. Please try again.');
-          throw error;
-        }
-        
-        if (session) {
-          console.log('Auth successful, redirecting to home');
-          navigate('/');
+        if (accessToken && refreshToken) {
+          // Set the session using the tokens
+          const { data: { session }, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (error) {
+            console.error('Error setting session:', error);
+            toast.error('Authentication error. Please try again.');
+            navigate('/auth');
+            return;
+          }
+
+          if (session) {
+            console.log('Auth successful, redirecting to home');
+            navigate('/');
+          } else {
+            console.error('No session found after callback');
+            toast.error('No session found. Please try signing in again.');
+            navigate('/auth');
+          }
         } else {
-          console.error('No session found after callback');
-          toast.error('No session found. Please try signing in again.');
-          navigate('/auth');
+          // Try to get the session normally
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Auth session error:', error);
+            toast.error('Authentication error. Please try again.');
+            navigate('/auth');
+            return;
+          }
+          
+          if (session) {
+            console.log('Auth successful, redirecting to home');
+            navigate('/');
+          } else {
+            console.error('No session found after callback');
+            toast.error('No session found. Please try signing in again.');
+            navigate('/auth');
+          }
         }
       } catch (error) {
         console.error('Error handling auth callback:', error);

@@ -139,37 +139,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: new URL('/auth/callback', window.location.origin).href,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
           },
-          // Add scopes for offline access
           scopes: 'email profile offline_access',
         }
-      });
-
-      // Log the response from Supabase
-      await fetch('/.netlify/functions/auth-logger', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'auth',
-          message: 'Supabase auth response received',
-          details: {
-            provider: 'google',
-            hasError: !!error,
-            errorMessage: error?.message,
-            hasData: !!data,
-            url: data?.url,
-            auth_response_type: Object.prototype.toString.call(data),
-            origin: window.location.origin,
-            redirectPath: '/auth/callback'
-          },
-          level: error ? 'error' : 'info'
-        })
       });
 
       if (error) {
@@ -177,60 +153,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
 
-      if (!data?.url) {
-        const noUrlError = new Error('No authentication URL received');
-        toast.error('Authentication failed: No redirect URL received');
-        throw noUrlError;
-      }
-
-      // Log successful redirect initiation
-      await fetch('/.netlify/functions/auth-logger', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'auth',
-          message: 'Redirecting to authentication URL',
-          details: {
-            provider: 'google',
-            redirectUrl: data.url,
-            origin: window.location.origin,
-            currentPath: window.location.pathname
-          },
-          level: 'info'
-        })
-      });
-
-      try {
-        // Use window.location.assign for more reliable navigation
-        window.location.assign(data.url);
-      } catch (redirectError) {
-        // If assign fails, try href as fallback
+      // If we have a URL, the browser will handle the redirect
+      if (data?.url) {
         window.location.href = data.url;
       }
-
     } catch (error) {
-      // Log any errors during the process
-      await fetch('/.netlify/functions/auth-logger', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'error',
-          message: 'Authentication error occurred',
-          details: {
-            provider: 'google',
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-          },
-          level: 'error'
-        })
-      });
-      console.error('Error:', error);
-    } finally {
+      console.error('Error during sign in:', error);
       setLoading(false);
+      toast.error('Failed to initiate sign in. Please try again.');
     }
   };
 
