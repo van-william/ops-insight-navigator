@@ -59,16 +59,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (provider: "google") => {
     try {
       const redirectUrl = `${window.location.origin}/auth/callback`;
-      console.log('Current origin:', window.location.origin);
-      console.log('Full redirect URL:', redirectUrl);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      // Log the auth attempt
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'auth',
+          message: 'Auth attempt started',
+          details: {
+            provider,
+            redirectUrl,
+            origin: window.location.origin,
+            currentUrl: window.location.href
+          }
+        })
+      });
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: redirectUrl
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       });
-      if (error) throw error;
+      
+      if (error) {
+        // Log the error
+        await fetch('/.netlify/functions/auth-logger', {
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'error',
+            message: 'Auth error occurred',
+            details: {
+              error: error.message,
+              provider,
+              redirectUrl
+            }
+          })
+        });
+        throw error;
+      }
     } catch (error: unknown) {
       const err = error as Error;
       console.error('Sign in error:', err);

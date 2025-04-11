@@ -1,16 +1,23 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleCallback = async () => {
+      console.log('=== Auth Callback Details ===');
+      console.log('Current URL:', window.location.href);
+      console.log('Location:', location);
+      console.log('Search params:', new URLSearchParams(location.search).toString());
+      
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
+        console.log('Session data:', session);
         if (error) {
           console.error('Auth session error:', error);
           toast.error('Authentication error. Please try again.');
@@ -33,7 +40,7 @@ const AuthCallback = () => {
     };
 
     handleCallback();
-  }, [navigate]);
+  }, [navigate, location]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
