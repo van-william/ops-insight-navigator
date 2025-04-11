@@ -22,6 +22,8 @@ Manufacturing operations, especially in HMLV environments, face unique challenge
 - **Guided Discovery**: AI-assisted exploration of improvement opportunities
 - **Visual Analytics**: Interactive charts and dashboards for insights
 - **Progress Tracking**: Monitor improvements over time
+- **Credit System**: AI usage tracking and credit management
+- **Comprehensive Testing**: Unit and component tests for reliability
 
 ## Getting Started
 
@@ -74,14 +76,38 @@ Manufacturing operations, especially in HMLV environments, face unique challenge
 - Styling with Tailwind CSS
 - Database and auth with Supabase
 - State management with TanStack Query
+- Testing with Vitest and React Testing Library
+- AI credit system for usage tracking
 
-See `.cursor/rules/development.md` for coding guidelines and best practices.
+### Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Run tests in watch mode:
+```bash
+npm run test:watch
+```
+
+Run tests with coverage:
+```bash
+npm run test:coverage
+```
+
+### Code Quality
+
+- ESLint for code linting
+- Prettier for code formatting
+- TypeScript for type safety
+- Cursor rules for development guidelines (see `.cursor/rules.json`)
 
 ## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+3. Commit your changes (`git commit -m 'type(scope): description'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
@@ -94,6 +120,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with [shadcn/ui](https://ui.shadcn.com/)
 - Powered by [Supabase](https://supabase.com/)
 - AI features by [OpenAI](https://openai.com/)
+- Testing with [Vitest](https://vitest.dev/) and [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 
 ## Support
 

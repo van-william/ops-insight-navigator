@@ -58,15 +58,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (provider: "google") => {
     try {
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log('Current origin:', window.location.origin);
+      console.log('Full redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `https://ops-insights.netlify.app/auth/callback`
+          redirectTo: redirectUrl
         }
       });
       if (error) throw error;
     } catch (error: unknown) {
       const err = error as Error;
+      console.error('Sign in error:', err);
       toast.error(`Error signing in: ${err.message}`);
     }
   };

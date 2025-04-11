@@ -1,0 +1,41 @@
+{
+  "rules": {
+    "typescript": {
+      "preferConst": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "strictNullChecks": true
+    },
+    "react": {
+      "preferFunctionComponents": true,
+      "preferHooks": true,
+      "noUnusedProps": true,
+      "preferNamedExports": true
+    },
+    "testing": {
+      "requireTests": true,
+      "preferTestId": true,
+      "coverageThreshold": 80
+    },
+    "formatting": {
+      "maxLineLength": 100,
+      "indentSize": 2,
+      "useTabs": false,
+      "trailingComma": "es5",
+      "semi": true,
+      "singleQuote": true
+    },
+    "imports": {
+      "preferAbsoluteImports": true,
+      "sortImports": true,
+      "groupImports": true
+    },
+    "git": {
+      "commitMessageFormat": "type(scope): description",
+      "branchNaming": "type/description",
+      "requireCleanWorkingTree": true
+    }
+  }
+} 
