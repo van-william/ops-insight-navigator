@@ -60,17 +60,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const redirectUrl = `${window.location.origin}/auth/callback`;
       
-      // Log the auth attempt
+      // Log detailed auth attempt info
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
         body: JSON.stringify({
           type: 'auth',
           message: 'Auth attempt started',
+          level: 'info',
           details: {
             provider,
             redirectUrl,
+            urlDetails: {
+              raw: redirectUrl,
+              encoded: encodeURIComponent(redirectUrl),
+              length: redirectUrl.length,
+              charCodes: Array.from(redirectUrl).map(c => c.charCodeAt(0)),
+              components: {
+                origin: window.location.origin,
+                pathname: '/auth/callback',
+                full: `${window.location.origin}/auth/callback`
+              }
+            },
+            configuredUrl: {
+              raw: 'https://ops-insights.netlify.app/auth/callback',
+              encoded: encodeURIComponent('https://ops-insights.netlify.app/auth/callback'),
+              length: 'https://ops-insights.netlify.app/auth/callback'.length,
+              charCodes: Array.from('https://ops-insights.netlify.app/auth/callback').map(c => c.charCodeAt(0))
+            },
+            exactMatch: redirectUrl === 'https://ops-insights.netlify.app/auth/callback',
             origin: window.location.origin,
-            currentUrl: window.location.href
+            currentUrl: window.location.href,
+            headers: {
+              host: window.location.host,
+              protocol: window.location.protocol,
+              referrer: document.referrer
+            }
           }
         })
       });
@@ -87,25 +111,61 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        // Log the error
+        // Log detailed error info
         await fetch('/.netlify/functions/auth-logger', {
           method: 'POST',
           body: JSON.stringify({
             type: 'error',
             message: 'Auth error occurred',
+            level: 'error',
             details: {
               error: error.message,
               provider,
-              redirectUrl
+              redirectUrl,
+              errorCode: error.status,
+              errorName: error.name,
+              stack: error.stack,
+              supabaseError: error
             }
           })
         });
         throw error;
       }
+
+      // Log success
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'auth',
+          message: 'Auth initiated successfully',
+          level: 'info',
+          details: {
+            provider,
+            redirectUrl,
+            data
+          }
+        })
+      });
     } catch (error: unknown) {
       const err = error as Error;
       console.error('Sign in error:', err);
       toast.error(`Error signing in: ${err.message}`);
+      
+      // Log unexpected errors
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'error',
+          message: 'Unexpected auth error',
+          level: 'error',
+          details: {
+            error: err.message,
+            stack: err.stack,
+            provider,
+            type: err.name
+          }
+        })
+      });
     }
   };
 

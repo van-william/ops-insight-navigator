@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 
 interface LogPayload {
-  type: 'auth' | 'error';
+  type: 'auth' | 'error' | 'debug';
   message: string;
   details?: {
     provider?: string;
@@ -9,10 +9,13 @@ interface LogPayload {
     origin?: string;
     currentUrl?: string;
     error?: string;
+    configuredUrls?: string[];
+    headers?: Record<string, string>;
     [key: string]: unknown;
   };
   timestamp?: string;
   environment?: string;
+  level?: 'info' | 'error' | 'debug';
 }
 
 export const handler: Handler = async (event, context) => {
@@ -32,20 +35,43 @@ export const handler: Handler = async (event, context) => {
       ...payload,
       timestamp: payload.timestamp || new Date().toISOString(),
       environment: payload.environment || process.env.NETLIFY_ENV || 'development',
+      // Add request context
+      details: {
+        ...payload.details,
+        requestId: context.awsRequestId,
+        functionName: context.functionName,
+        requestHeaders: event.headers,
+        netlifyContext: {
+          site: process.env.SITE_NAME,
+          deployId: process.env.DEPLOY_ID,
+          deployUrl: process.env.DEPLOY_URL,
+        }
+      }
     };
 
-    // Log to Netlify's logging system
-    console.log(JSON.stringify(log));
+    // Format log based on level
+    const logPrefix = `[${log.level || 'info'}] [${log.type}]`;
+    console.log(`${logPrefix} ${JSON.stringify(log, null, 2)}`);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Log recorded successfully' }),
+      body: JSON.stringify({ message: 'Log recorded successfully', log }),
     };
   } catch (error) {
-    console.error('Error processing log:', error);
+    const errorLog = {
+      type: 'error',
+      message: 'Error processing log',
+      details: {
+        error: String(error),
+        originalBody: event.body,
+      },
+      timestamp: new Date().toISOString(),
+      level: 'error'
+    };
+    console.error(JSON.stringify(errorLog, null, 2));
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Error processing log', error: String(error) }),
+      body: JSON.stringify(errorLog),
     };
   }
 }; 
