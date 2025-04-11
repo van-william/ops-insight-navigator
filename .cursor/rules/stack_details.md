@@ -1,6 +1,7 @@
 ## Tech Details
 App uses:
-* Next.js
+* Vite
+* React
 * tailwind.css
 * supabase for data storage
 * Google for OAuth
