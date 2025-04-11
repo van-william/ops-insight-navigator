@@ -24,7 +24,7 @@ export const AIUsageCounter = () => {
 
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <MessageCircle className="h-4 w-4" />
+      <MessageCircle className="h-4 w-4" data-testid="message-circle-icon" />
       <span>{usage || 0}/10 questions today</span>
     </div>
   );

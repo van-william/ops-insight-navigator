@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { MainSidebar } from "@/components/MainSidebar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,7 +27,7 @@ export default function MainLayout({ children, requireAuth = true }: MainLayoutP
         <main className="flex-1 pl-64">
           <div className="container mx-auto p-6">
             <div className="space-y-6">
-              <Skeleton className="h-12 w-2/3" />
+              <Skeleton className="h-12 w-2/3" data-testid="skeleton" />
               <Skeleton className="h-64 w-full rounded-lg" />
             </div>
           </div>
