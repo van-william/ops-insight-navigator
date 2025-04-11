@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect } from "react";
@@ -37,7 +36,7 @@ const Auth = () => {
             <Button 
               variant="outline" 
               className="flex items-center gap-2 justify-center py-6"
-              onClick={() => signIn("google")}
+              onClick={() => signIn()}
               disabled={loading}
             >
               <svg width="20" height="20" viewBox="0 0 24 24">
