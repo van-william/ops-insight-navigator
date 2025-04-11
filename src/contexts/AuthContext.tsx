@@ -136,10 +136,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Add loading state
       setLoading(true);
 
+      // Ensure we're using the correct redirect URL
+      const redirectUrl = new URL('/auth/callback', window.location.origin).href;
+      
+      console.log('Attempting sign in with redirect URL:', redirectUrl);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -149,14 +154,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         toast.error(`Authentication failed: ${error.message}`);
         throw error;
       }
 
-      // If we have a URL, the browser will handle the redirect
-      if (data?.url) {
-        window.location.href = data.url;
+      if (!data?.url) {
+        console.error('No redirect URL received from Supabase');
+        toast.error('Authentication failed: No redirect URL received');
+        throw new Error('No redirect URL received');
       }
+
+      console.log('Redirecting to:', data.url);
+      
+      // Use window.location.assign for more reliable navigation
+      window.location.assign(data.url);
     } catch (error) {
       console.error('Error during sign in:', error);
       setLoading(false);
