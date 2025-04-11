@@ -31,50 +31,87 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Log auth state changes
-        await fetch('/.netlify/functions/auth-logger', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            type: 'auth',
-            message: `Auth state changed: ${event}`,
-            details: {
-              event,
-              hasSession: !!session,
-              userId: session?.user?.id,
-              userEmail: session?.user?.email,
-              authProvider: session?.user?.app_metadata?.provider,
-              timestamp: new Date().toISOString()
+        setLoading(true);
+        try {
+          // Log auth state changes
+          await fetch('/.netlify/functions/auth-logger', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
             },
-            level: 'info'
-          })
-        });
+            body: JSON.stringify({
+              type: 'auth',
+              message: `Auth state changed: ${event}`,
+              details: {
+                event,
+                hasSession: !!session,
+                userId: session?.user?.id,
+                userEmail: session?.user?.email,
+                authProvider: session?.user?.app_metadata?.provider,
+                timestamp: new Date().toISOString(),
+                anonymousMode: localStorage.getItem("anonymousMode") === "true"
+              },
+              level: 'info'
+            })
+          });
 
-        if (event === 'SIGNED_IN' && session) {
-          setSession(session);
-          setUser(session.user);
-          setIsAnonymous(false);
-          localStorage.removeItem("anonymousMode");
-          toast.success("Successfully signed in");
-        } else if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-          toast.info("Signed out successfully");
+          if (event === 'SIGNED_IN' && session) {
+            setSession(session);
+            setUser(session.user);
+            setIsAnonymous(false);
+            localStorage.removeItem("anonymousMode");
+            // Store session in localStorage for persistence
+            localStorage.setItem("supabase.auth.token", JSON.stringify(session));
+            toast.success("Successfully signed in");
+            navigate('/'); // Redirect to home after successful sign in
+          } else if (event === 'SIGNED_OUT') {
+            setSession(null);
+            setUser(null);
+            // Clear persisted session
+            localStorage.removeItem("supabase.auth.token");
+            toast.info("Signed out successfully");
+            navigate('/auth');
+          } else if (event === 'TOKEN_REFRESHED' && session) {
+            setSession(session);
+            setUser(session.user);
+            // Update persisted session
+            localStorage.setItem("supabase.auth.token", JSON.stringify(session));
+          }
+        } catch (error) {
+          console.error('Error handling auth state change:', error);
+          toast.error('Error updating authentication state');
+        } finally {
+          setLoading(false);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        // Check for persisted session first
+        const persistedSession = localStorage.getItem("supabase.auth.token");
+        if (persistedSession) {
+          const { session } = JSON.parse(persistedSession);
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        toast.error('Error initializing authentication');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signIn = async () => {
     try {
@@ -96,14 +133,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         })
       });
 
+      // Add loading state
+      setLoading(true);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: new URL('/auth/callback', window.location.origin).href,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          }
+          },
+          // Add scopes for offline access
+          scopes: 'email profile offline_access',
         }
       });
 
@@ -122,13 +164,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             errorMessage: error?.message,
             hasData: !!data,
             url: data?.url,
-            auth_response_type: Object.prototype.toString.call(data)
+            auth_response_type: Object.prototype.toString.call(data),
+            origin: window.location.origin,
+            redirectPath: '/auth/callback'
           },
           level: error ? 'error' : 'info'
         })
       });
 
-      if (error) throw error;
+      if (error) {
+        toast.error(`Authentication failed: ${error.message}`);
+        throw error;
+      }
+
+      if (!data?.url) {
+        const noUrlError = new Error('No authentication URL received');
+        toast.error('Authentication failed: No redirect URL received');
+        throw noUrlError;
+      }
 
       // Log successful redirect initiation
       await fetch('/.netlify/functions/auth-logger', {
@@ -142,10 +195,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           details: {
             provider: 'google',
             redirectUrl: data.url,
+            origin: window.location.origin,
+            currentPath: window.location.pathname
           },
           level: 'info'
         })
       });
+
+      try {
+        // Use window.location.assign for more reliable navigation
+        window.location.assign(data.url);
+      } catch (redirectError) {
+        // If assign fails, try href as fallback
+        window.location.href = data.url;
+      }
 
     } catch (error) {
       // Log any errors during the process
@@ -166,6 +229,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         })
       });
       console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
