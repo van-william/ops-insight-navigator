@@ -106,6 +106,13 @@ export const handler: Handler = async (event, context) => {
   try {
     const payload = JSON.parse(event.body || '{}') as LogPayload;
     
+    // Specific handling for auth-related events with redirects
+    if (payload.type === 'auth' && payload.details?.redirectUrl) {
+      console.log('REDIRECT URL:', payload.details.redirectUrl);
+      console.log('ORIGIN:', payload.details.origin || 'N/A');
+      console.log('CURRENT URL:', payload.details.currentUrl || 'N/A');
+    }
+    
     // Add timestamp and environment if not provided
     const log: LogPayload = {
       ...payload,

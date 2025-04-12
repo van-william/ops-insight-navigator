@@ -10,12 +10,23 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        // Log that we've entered the callback handler
+        console.log('Auth callback handler started');
+        console.log('URL:', window.location.href);
+        console.log('Hash:', window.location.hash);
+        
         // Get the hash parameters from the URL
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         
+        console.log('Hash params found:', {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken
+        });
+        
         if (accessToken && refreshToken) {
+          console.log('Tokens found in URL, setting session');
           // Set the session using the tokens
           const { data: { session }, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -38,6 +49,7 @@ const AuthCallback = () => {
             navigate('/auth');
           }
         } else {
+          console.log('No tokens in URL, checking for session');
           // Try to get the session normally
           const { data: { session }, error } = await supabase.auth.getSession();
           

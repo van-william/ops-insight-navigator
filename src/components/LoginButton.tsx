@@ -5,10 +5,14 @@ export const LoginButton = () => {
   const { user, loading } = useAuth();
 
   const handleLogin = async () => {
+    // Use more reliable URL construction
+    const redirectUrl = new URL('/auth/callback', window.location.origin).href;
+    console.log('Login redirect URL:', redirectUrl);
+    
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
       },
     });
   };

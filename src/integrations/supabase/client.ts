@@ -48,7 +48,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     headers: {
-      'X-Client-Info': 'ops-insight-navigator'
+      'X-Client-Info': 'ops-insights'
     }
   }
+});
+
+// Add debug logging for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.debug('Auth state changed:', event, session?.user?.email);
 });

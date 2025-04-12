@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async () => {
     try {
-      // Log the start of authentication
+      // Log the start of authentication with extended details
       await fetch('/.netlify/functions/auth-logger', {
         method: 'POST',
         headers: {
@@ -128,6 +128,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             provider: 'google',
             origin: window.location.origin,
             currentUrl: window.location.href,
+            timestamp: new Date().toISOString(),
+            deployUrl: import.meta.env.VITE_NETLIFY_DEPLOY_URL || 'unknown',
+            userAgent: navigator.userAgent
           },
           level: 'info'
         })
@@ -140,6 +143,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const redirectUrl = new URL('/auth/callback', window.location.origin).href;
       
       console.log('Attempting sign in with redirect URL:', redirectUrl);
+      console.log('Current origin:', window.location.origin);
+      console.log('Current URL:', window.location.href);
+      console.log('Deploy URL:', import.meta.env.VITE_NETLIFY_DEPLOY_URL || 'unknown');
+
+      // Log the exact redirect URL that will be used
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'auth',
+          message: 'Using redirect URL for OAuth',
+          details: {
+            redirectUrl,
+            origin: window.location.origin,
+            currentUrl: window.location.href
+          },
+          level: 'info'
+        })
+      });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -166,6 +190,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       console.log('Redirecting to:', data.url);
+      
+      // Log the redirect URL from Supabase
+      await fetch('/.netlify/functions/auth-logger', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'auth',
+          message: 'Supabase provided redirect URL',
+          details: {
+            supabaseUrl: data.url,
+            redirectUrl,
+            origin: window.location.origin,
+          },
+          level: 'info'
+        })
+      });
       
       // Use window.location.assign for more reliable navigation
       window.location.assign(data.url);
