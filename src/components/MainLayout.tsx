@@ -25,7 +25,7 @@ export default function MainLayout({ children, requireAuth = true }: MainLayoutP
         <MainSidebar />
         
         <main className="flex-1 pl-64">
-          <div className="container mx-auto p-6">
+          <div className="container mx-auto p-8">
             <div className="space-y-6">
               <Skeleton className="h-12 w-2/3" data-testid="skeleton" />
               <Skeleton className="h-64 w-full rounded-lg" />
@@ -41,7 +41,7 @@ export default function MainLayout({ children, requireAuth = true }: MainLayoutP
       <MainSidebar />
       
       <main className="flex-1 pl-64">
-        <div className="container mx-auto p-6">
+        <div className="container mx-auto p-8 max-w-7xl">
           {children}
         </div>
       </main>
