@@ -9,8 +9,12 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Let Supabase handle the session from the URL
+        console.log('Starting auth callback handling');
+        
+        // First check if we have a session in the URL
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        console.log('Session check result:', { session: !!session, error });
         
         if (error) {
           console.error('Auth session error:', error);
@@ -20,7 +24,7 @@ const AuthCallback = () => {
         }
         
         if (session) {
-          console.log('Auth successful, redirecting to home');
+          console.log('Auth successful, user:', session.user.email);
           navigate('/');
         } else {
           console.error('No session found after callback');
