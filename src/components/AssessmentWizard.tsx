@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { AssessmentSummary } from "@/components/AssessmentSummary";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Question {
   id: string;
@@ -88,7 +89,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, { title: string; description: string
 
 export const AssessmentWizard = ({ onComplete }: AssessmentWizardProps) => {
   const { user, isAnonymous } = useAuth();
-  const [currentCategory, setCurrentCategory] = useState<string>(CATEGORIES[0]);
+  const [currentCategory, setCurrentCategory] = useState<typeof CATEGORIES[number]>(CATEGORIES[0]);
   const [responses, setResponses] = useState<Response[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
@@ -350,172 +351,111 @@ export const AssessmentWizard = ({ onComplete }: AssessmentWizardProps) => {
     );
   }
 
-  if (loadingQuestions) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (questionsError) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-500">Error loading questions. Please try again.</p>
-        <pre className="mt-2 text-sm text-gray-500">{JSON.stringify(questionsError, null, 2)}</pre>
-      </div>
-    );
-  }
-
-  if (!questions?.length) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-gray-500">No questions found for category: {currentCategory}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">
-              {CATEGORY_DESCRIPTIONS[currentCategory].title}
-            </h2>
-            <p className="text-muted-foreground mt-1">
-              {CATEGORY_DESCRIPTIONS[currentCategory].description}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleCategoryChange("prev")}
-              disabled={currentCategory === CATEGORIES[0]}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleCategoryChange("next")}
-              disabled={currentCategory === CATEGORIES[CATEGORIES.length - 1]}
-            >
-              Next
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {CATEGORY_DESCRIPTIONS[currentCategory].title}
+          </h1>
+          <p className="text-muted-foreground">
+            {CATEGORY_DESCRIPTIONS[currentCategory].description}
+          </p>
         </div>
-        
-        <Card className="bg-muted/50">
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <Progress value={categoryProgress} className="h-2" />
-                <p className="text-sm text-muted-foreground">
-                  Category Progress: {responses.filter(r => questions?.some(q => q.id === r.questionId)).length} of {questions?.length} questions answered
-                </p>
-              </div>
-              
-              <div className="space-y-1">
-                <Progress value={overallProgress} className="h-1" />
-                <p className="text-sm text-muted-foreground">
-                  Overall Progress: {Math.round(overallProgress)}%
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {questions?.map((question) => (
-        <Card key={question.id}>
-          <CardHeader>
-            <CardTitle className="text-lg">{question.question}</CardTitle>
-            {question.description && (
-              <CardDescription>{question.description}</CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <RadioGroup
-                onValueChange={(value) =>
-                  handleResponse(
-                    question.id,
-                    parseInt(value),
-                    responses.find((r) => r.questionId === question.id)?.notes || ""
-                  )
-                }
-                defaultValue={responses.find((r) => r.questionId === question.id)?.score.toString()}
-              >
-                <div className="grid grid-cols-5 gap-4">
-                  {[1, 2, 3, 4, 5].map((score) => (
-                    <div key={score} className="flex flex-col items-center gap-2">
-                      <RadioGroupItem value={score.toString()} id={`${question.id}-${score}`} />
-                      <Label htmlFor={`${question.id}-${score}`}>{score}</Label>
-                    </div>
-                  ))}
-                </div>
-              </RadioGroup>
-
-              <div className="space-y-2">
-                <Label htmlFor={`notes-${question.id}`}>Notes (Optional)</Label>
-                <Textarea
-                  id={`notes-${question.id}`}
-                  placeholder="Add any relevant notes or context..."
-                  value={responses.find((r) => r.questionId === question.id)?.notes || ""}
-                  onChange={(e) =>
-                    handleResponse(
-                      question.id,
-                      responses.find((r) => r.questionId === question.id)?.score || 0,
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-
-      <div className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={() => handleCategoryChange("prev")}
-          disabled={currentCategory === CATEGORIES[0]}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Previous Category
-        </Button>
-
-        {currentCategory === CATEGORIES[CATEGORIES.length - 1] ? (
-          <Button 
-            onClick={handleShowSummary}
-            className="bg-green-600 hover:bg-green-700"
-            disabled={responses.length === 0}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => handleCategoryChange("prev")}
+            disabled={currentCategory === CATEGORIES[0]}
           >
-            View Summary
-            <ChevronRight className="ml-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Previous
           </Button>
-        ) : (
           <Button
             onClick={() => handleCategoryChange("next")}
             disabled={currentCategory === CATEGORIES[CATEGORIES.length - 1]}
           >
-            Next Category
+            Next
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        {loadingQuestions ? (
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : questionsError ? (
+          <div className="text-center py-8">
+            <p className="text-destructive">Failed to load questions. Please try again.</p>
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="mt-4"
+            >
+              Reload Page
+            </Button>
+          </div>
+        ) : (
+          questions?.map((question) => (
+            <Card key={question.id}>
+              <CardHeader>
+                <CardTitle>{question.question}</CardTitle>
+                {question.description && (
+                  <CardDescription>{question.description}</CardDescription>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <RadioGroup
+                    value={responses.find((r) => r.questionId === question.id)?.score.toString()}
+                    onValueChange={(value) =>
+                      handleResponse(question.id, parseInt(value), responses.find((r) => r.questionId === question.id)?.notes || "")
+                    }
+                    className="grid grid-cols-5 gap-4"
+                  >
+                    {[1, 2, 3, 4, 5].map((score) => (
+                      <div key={score} className="flex items-center space-x-2">
+                        <RadioGroupItem value={score.toString()} id={`${question.id}-${score}`} />
+                        <Label htmlFor={`${question.id}-${score}`}>{score}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  <Textarea
+                    placeholder="Add notes (optional)"
+                    value={responses.find((r) => r.questionId === question.id)?.notes || ""}
+                    onChange={(e) =>
+                      handleResponse(
+                        question.id,
+                        responses.find((r) => r.questionId === question.id)?.score || 0,
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))
         )}
       </div>
 
-      {(!user || isAnonymous) && (
-        <div className="text-center p-2 bg-yellow-50 rounded-md text-yellow-700 text-sm">
-          You are not logged in. Your responses are saved only in this browser. 
-          Login to save your assessment permanently.
-        </div>
-      )}
+      <div className="flex items-center justify-between">
+        <Progress
+          value={(CATEGORIES.indexOf(currentCategory) + 1) * 10}
+          className="w-full"
+        />
+        <Button
+          onClick={handleShowSummary}
+          disabled={!responses.length}
+          className="ml-4"
+        >
+          Show Summary
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }; 
