@@ -173,7 +173,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             access_type: 'offline',
             prompt: 'consent',
           },
-          scopes: 'email profile offline_access',
+          scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
         }
       });
 

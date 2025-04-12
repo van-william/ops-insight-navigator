@@ -13,11 +13,19 @@ interface Response {
   notes: string;
 }
 
+interface Question {
+  id: string;
+  category: string;
+  question: string;
+  description: string | null;
+  weight: number;
+}
+
 export default function MaturityAssessment() {
   const [assessmentStarted, setAssessmentStarted] = useState(false);
   const [assessmentCompleted, setAssessmentCompleted] = useState(false);
   const [responses, setResponses] = useState<Response[]>([]);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
 
   const handleStartAssessment = () => {
     setAssessmentStarted(true);

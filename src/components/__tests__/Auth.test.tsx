@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { AuthProvider } from '../AuthProvider';
 import { LoginButton } from '../LoginButton';
 import { supabase } from '../../integrations/supabase/client';
@@ -68,7 +68,9 @@ describe('Auth Components', () => {
     );
 
     const loginButton = screen.getByText('Sign In');
-    fireEvent.click(loginButton);
+    await act(async () => {
+      fireEvent.click(loginButton);
+    });
 
     await waitFor(() => {
       expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
@@ -103,18 +105,22 @@ describe('Auth Components', () => {
       error: null,
     });
 
-    render(
-      <AuthProvider>
-        <LoginButton />
-      </AuthProvider>
-    );
+    await act(async () => {
+      render(
+        <AuthProvider>
+          <LoginButton />
+        </AuthProvider>
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Sign Out')).toBeInTheDocument();
     });
 
     const logoutButton = screen.getByText('Sign Out');
-    fireEvent.click(logoutButton);
+    await act(async () => {
+      fireEvent.click(logoutButton);
+    });
 
     await waitFor(() => {
       expect(supabase.auth.signOut).toHaveBeenCalled();
@@ -140,7 +146,9 @@ describe('Auth Components', () => {
 
     // Mock auth state change
     vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((callback) => {
-      callback('SIGNED_IN', mockSession);
+      act(() => {
+        callback('SIGNED_IN', mockSession);
+      });
       return {
         data: {
           subscription: {
@@ -152,11 +160,13 @@ describe('Auth Components', () => {
       };
     });
 
-    render(
-      <AuthProvider>
-        <LoginButton />
-      </AuthProvider>
-    );
+    await act(async () => {
+      render(
+        <AuthProvider>
+          <LoginButton />
+        </AuthProvider>
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Sign Out')).toBeInTheDocument();

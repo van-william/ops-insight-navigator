@@ -177,9 +177,10 @@ export const AssessmentSummary = ({
       }
       
       onSaveComplete();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving assessment:", error);
-      toast.error(`Failed to save assessment: ${error.message || "Unknown error"}`);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to save assessment: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -325,7 +326,7 @@ export const AssessmentSummary = ({
         });
         
         // Update current Y position for next category
-        const finalY = (pdf as any).lastAutoTable.finalY;
+        const finalY = pdf.lastAutoTable?.finalY ?? currentY;
         currentY = finalY + 15;
       });
       
