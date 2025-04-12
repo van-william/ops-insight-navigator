@@ -9,31 +9,28 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('Starting auth callback handling');
-        
-        // First check if we have a session in the URL
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        console.log('Session check result:', { session: !!session, error });
+        // Let Supabase handle everything automatically
+        const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Auth session error:', error);
-          toast.error('Authentication error. Please try again.');
+          console.error('Auth error:', error);
+          toast.error('Authentication failed');
           navigate('/auth');
           return;
         }
         
-        if (session) {
-          console.log('Auth successful, user:', session.user.email);
+        if (data?.session) {
+          console.log('Authentication successful');
+          toast.success('Signed in successfully');
           navigate('/');
         } else {
-          console.error('No session found after callback');
+          console.error('No session found');
           toast.error('No session found. Please try signing in again.');
           navigate('/auth');
         }
       } catch (error) {
-        console.error('Error handling auth callback:', error);
-        toast.error('Failed to complete authentication. Please try again.');
+        console.error('Auth callback error:', error);
+        toast.error('Authentication error occurred');
         navigate('/auth');
       }
     };
@@ -45,6 +42,7 @@ const AuthCallback = () => {
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <h1 className="text-2xl font-semibold mb-4">Completing sign in...</h1>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
         <p className="text-muted-foreground">Please wait while we verify your authentication.</p>
       </div>
     </div>

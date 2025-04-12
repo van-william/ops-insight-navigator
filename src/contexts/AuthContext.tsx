@@ -28,24 +28,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const anonymousMode = localStorage.getItem("anonymousMode") === "true";
     setIsAnonymous(anonymousMode);
 
-    // Initialize auth state
-    const initializeAuth = async () => {
+    // Check for an active session
+    const getInitialSession = async () => {
       try {
-        // Get the current session
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          throw error;
-        }
-
-        if (currentSession) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          setIsAnonymous(false);
-        }
+        setLoading(true);
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
       } catch (error) {
-        console.error('Error initializing auth:', error);
-        toast.error('Error initializing authentication');
+        console.error('Error getting session:', error);
       } finally {
         setLoading(false);
       }
@@ -53,54 +44,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        console.log('Auth state changed:', event, newSession?.user?.email);
+      (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         
-        try {
-          switch (event) {
-            case 'SIGNED_IN':
-              if (newSession) {
-                setSession(newSession);
-                setUser(newSession.user);
-                setIsAnonymous(false);
-                localStorage.removeItem("anonymousMode");
-                toast.success("Successfully signed in");
-                navigate('/');
-              }
-              break;
-              
-            case 'SIGNED_OUT':
-              setSession(null);
-              setUser(null);
-              setIsAnonymous(false);
-              localStorage.removeItem("anonymousMode");
-              toast.info("Signed out successfully");
-              navigate('/auth');
-              break;
-              
-            case 'TOKEN_REFRESHED':
-              if (newSession) {
-                setSession(newSession);
-                setUser(newSession.user);
-              }
-              break;
-              
-            case 'USER_UPDATED':
-              if (newSession) {
-                setSession(newSession);
-                setUser(newSession.user);
-              }
-              break;
-          }
-        } catch (error) {
-          console.error('Error handling auth state change:', error);
-          toast.error('Error updating authentication state');
+        if (event === 'SIGNED_IN' && currentSession) {
+          setIsAnonymous(false);
+          localStorage.removeItem("anonymousMode");
+          toast.success("Successfully signed in");
+        } else if (event === 'SIGNED_OUT') {
+          setIsAnonymous(false);
+          localStorage.removeItem("anonymousMode");
+          navigate('/auth');
         }
+        
+        setLoading(false);
       }
     );
 
-    // Initialize auth
-    initializeAuth();
+    // Initialize session
+    getInitialSession();
 
     // Cleanup subscription
     return () => {
@@ -110,42 +74,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async () => {
     try {
-      setLoading(true);
-      
-      // Get the current URL for the callback
-      const redirectUrl = new URL('/auth/callback', window.location.origin).href;
-      
-      console.log('Starting sign in with redirect URL:', redirectUrl);
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      console.log('Signing in with redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
+          redirectTo: redirectUrl
         }
       });
 
       if (error) throw error;
       
       if (!data?.url) {
-        throw new Error('No redirect URL received');
+        toast.error('Failed to get authentication URL');
+        return;
       }
-
-      // Redirect to the OAuth provider
+      
+      // Redirect to the authentication URL
       window.location.href = data.url;
     } catch (error) {
       console.error('Sign in error:', error);
       toast.error('Failed to sign in. Please try again.');
-      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -153,13 +108,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setIsAnonymous(false);
       localStorage.removeItem("anonymousMode");
+      toast.success('Signed out successfully');
       
       navigate('/auth');
     } catch (error) {
       console.error('Sign out error:', error);
       toast.error('Failed to sign out. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 

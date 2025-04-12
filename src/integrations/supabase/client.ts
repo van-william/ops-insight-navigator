@@ -13,18 +13,8 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'ops-insights'
-    }
-  }
-});
+// Create a simple client with minimal configuration
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Add debug logging for auth state changes
 supabase.auth.onAuthStateChange((event, session) => {
