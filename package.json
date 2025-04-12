@@ -9,8 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:watch": "vitest watch"
+    "test": "vitest --env-file .env.test",
+    "test:watch": "vitest watch --env-file .env.test"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
